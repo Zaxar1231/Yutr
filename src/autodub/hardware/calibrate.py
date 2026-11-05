@@ -149,9 +149,7 @@ def derive(
             cal.settings_patch.update({"tts_precision": "fp32"})
             if selection.settings.whisper_compute_type in ("float16", "int8_float16"):
                 cal.settings_patch["whisper_compute_type"] = "int8_float32"
-            cal.notes.append(
-                "Половинная точность (fp16) на этой видеокарте не быстрее обычной — отключена."
-            )
+            cal.notes.append("Половинная точность (fp16) на этой видеокарте не быстрее обычной — отключена.")
     elif tier != Tier.CPU and "error" in gpu:
         cal.notes.append("Тест видеокарты не прошёл, профиль оставлен по характеристикам.")
 
@@ -163,11 +161,7 @@ def derive(
     if asr_rtf is not None:
         expected = float(load_profile_data()["tiers"][tier.value]["rtf"]["asr"])
         factors.append(expected / max(asr_rtf, 1e-3))
-        if (
-            tier == Tier.CPU
-            and selection.settings.whisper_model == "medium"
-            and asr_rtf > CPU_MEDIUM_MAX_RTF
-        ):
+        if tier == Tier.CPU and selection.settings.whisper_model == "medium" and asr_rtf > CPU_MEDIUM_MAX_RTF:
             cal.settings_patch["whisper_model"] = "small"
             cal.notes.append(
                 "Процессор распознаёт речь модели medium медленнее реального времени — "

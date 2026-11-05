@@ -214,9 +214,7 @@ def run_with_fallback[T](
 # --- disk ---------------------------------------------------------------------------------
 
 
-def models_disk_mb(
-    settings: ProfileSettings, *, offline_translation: bool = False
-) -> dict[str, int]:
+def models_disk_mb(settings: ProfileSettings, *, offline_translation: bool = False) -> dict[str, int]:
     data = load_profile_data()["models"]
     keys = model_keys(settings)
     if not offline_translation:

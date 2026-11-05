@@ -116,9 +116,7 @@ def test_linux_sysfs(tmp_path: Path) -> None:
 
 
 def test_parse_proc_cpuinfo() -> None:
-    text = (
-        "processor\t: 0\nmodel name\t: AMD Ryzen 7 7800X3D\nflags\t\t: fpu sse avx avx2 avx512f\n"
-    )
+    text = "processor\t: 0\nmodel name\t: AMD Ryzen 7 7800X3D\nflags\t\t: fpu sse avx avx2 avx512f\n"
     name, flags = parse_proc_cpuinfo(text)
     assert name == "AMD Ryzen 7 7800X3D" and {"avx2", "avx512f"} <= flags
 
@@ -176,7 +174,5 @@ def test_fingerprint_ignores_volatile_values_but_sees_driver_change() -> None:
 def test_primary_gpu_prefers_discrete() -> None:
     from .conftest import gpu
 
-    rep = make_report(
-        [gpu(GpuVendor.INTEL, "Intel(R) UHD Graphics", 128, integrated=True), nvidia(6144)]
-    )
+    rep = make_report([gpu(GpuVendor.INTEL, "Intel(R) UHD Graphics", 128, integrated=True), nvidia(6144)])
     assert rep.primary_gpu().vendor == GpuVendor.NVIDIA

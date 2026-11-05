@@ -66,9 +66,7 @@ def _kv(rows: list[tuple[str, str]]) -> ft.Column:
     )
 
 
-def hw_card(
-    icon: ft.IconData, title: str, rows: list[tuple[str, str]], subtitle: str = ""
-) -> ft.Card:
+def hw_card(icon: ft.IconData, title: str, rows: list[tuple[str, str]], subtitle: str = "") -> ft.Card:
     return ft.Card(
         variant=ft.CardVariant.OUTLINED,
         col={"xs": 12, "md": 6, "xl": 4},
@@ -277,23 +275,15 @@ class SystemScreen(ft.Column):
                             color=ft.Colors.ON_PRIMARY_CONTAINER,
                         ),
                         ft.Column(
-                            [
-                                ft.Text(f"• {r}", color=ft.Colors.ON_PRIMARY_CONTAINER)
-                                for r in sel.reasons
-                            ],
+                            [ft.Text(f"• {r}", color=ft.Colors.ON_PRIMARY_CONTAINER) for r in sel.reasons],
                             spacing=2,
                         ),
-                        ft.Divider(
-                            color=ft.Colors.with_opacity(0.2, ft.Colors.ON_PRIMARY_CONTAINER)
-                        ),
+                        ft.Divider(color=ft.Colors.with_opacity(0.2, ft.Colors.ON_PRIMARY_CONTAINER)),
                         ft.Row(
                             [
-                                ft.Icon(
-                                    ft.Icons.TIMER_OUTLINED, color=ft.Colors.ON_PRIMARY_CONTAINER
-                                ),
+                                ft.Icon(ft.Icons.TIMER_OUTLINED, color=ft.Colors.ON_PRIMARY_CONTAINER),
                                 ft.Text(
-                                    f"Видео на 10 минут обработается примерно за {lo}–{hi} "
-                                    f"{_minutes(hi)}",
+                                    f"Видео на 10 минут обработается примерно за {lo}–{hi} {_minutes(hi)}",
                                     color=ft.Colors.ON_PRIMARY_CONTAINER,
                                     weight=ft.FontWeight.W_500,
                                     expand=True,
@@ -326,9 +316,7 @@ class SystemScreen(ft.Column):
                     "Обработка будет медленнее, зато батарея продержится дольше.",
                     ft.Colors.SECONDARY_CONTAINER,
                     ft.Colors.ON_SECONDARY_CONTAINER,
-                    action=ft.TextButton(
-                        content="Включить", on_click=lambda _e: self._set_eco(True)
-                    ),
+                    action=ft.TextButton(content="Включить", on_click=lambda _e: self._set_eco(True)),
                 )
             )
         return out
@@ -393,9 +381,7 @@ class SystemScreen(ft.Column):
                 dense=True,
             )
         elif meta.kind == "bool":
-            control = ft.Switch(
-                value=bool(value), on_change=lambda e, k=key: self._set(k, e.control.value)
-            )
+            control = ft.Switch(value=bool(value), on_change=lambda e, k=key: self._set(k, e.control.value))
         else:
             control = ft.TextField(
                 value=str(value),
@@ -500,9 +486,7 @@ def _minutes(n: int) -> str:
     return count(n, "минуту", "минуты", "минут").split(" ", 1)[1]
 
 
-def _banner(
-    icon: ft.IconData, text: str, bg: str, fg: str, action: ft.Control | None = None
-) -> ft.Control:
+def _banner(icon: ft.IconData, text: str, bg: str, fg: str, action: ft.Control | None = None) -> ft.Control:
     row: list[ft.Control] = [
         ft.Icon(icon, color=fg),
         ft.Text(text, color=fg, expand=True),

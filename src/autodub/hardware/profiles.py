@@ -132,9 +132,9 @@ def choose_accelerator(report: HardwareReport) -> tuple[Accelerator, GpuInfo | N
         )
     amd = [g for g in discrete if g.vendor == GpuVendor.AMD]
     for gpu in amd:
-        supported = (
-            report.os == "Windows" and windows_11(report) and _ROCM_WINDOWS.search(gpu.name)
-        ) or (report.os == "Linux" and (gpu.vram_total_mb or 0) >= 4 * GIB)
+        supported = (report.os == "Windows" and windows_11(report) and _ROCM_WINDOWS.search(gpu.name)) or (
+            report.os == "Linux" and (gpu.vram_total_mb or 0) >= 4 * GIB
+        )
         if supported:
             return Accelerator.ROCM, gpu, notes
     others = [g for g in discrete if g.vendor in (GpuVendor.AMD, GpuVendor.INTEL)]
@@ -232,15 +232,13 @@ def _settings_for(
         whisper_ct, batch = "int8", 1
         if tier != Tier.CPU:  # AMD GPU via ROCm: Whisper on CPU, torch models on GPU
             notes.append(
-                "Распознавание речи (Whisper) работает только на NVIDIA, "
-                "поэтому идёт на процессоре."
+                "Распознавание речи (Whisper) работает только на NVIDIA, поэтому идёт на процессоре."
             )
 
     tts_precision = t["tts_precision"]
     if torch_gpu == "cuda" and not _has_fast_fp16(gpu):
         notes.append(
-            "У видеокарты нет тензорных ядер: вместо float16 используется "
-            "int8/float32, так быстрее."
+            "У видеокарты нет тензорных ядер: вместо float16 используется int8/float32, так быстрее."
         )
         if whisper_gpu == "cuda":
             whisper_ct = "int8_float32" if whisper_ct.startswith("int8") else "int8"
@@ -271,9 +269,7 @@ def _settings_for(
         if whisper_gpu == "cuda"
         else "int8",
         # CTranslate2 (MADLAD) is CUDA-only as well.
-        translate_offline_device="cuda"
-        if whisper_gpu == "cuda" and t["translate_offline_on_gpu"]
-        else "cpu",
+        translate_offline_device="cuda" if whisper_gpu == "cuda" and t["translate_offline_on_gpu"] else "cpu",
         cpu_threads=threads,
         ffmpeg_encoder=encoder_for(report, gpu),
         ytdlp_fragments=fragments,

@@ -57,9 +57,7 @@ def kind_linux(device: str | None, sys_block: Path = Path("/sys/block")) -> str:
     if not device:
         return "unknown"
     # /dev/nvme0n1p2 -> nvme0n1, /dev/sda1 -> sda
-    for cand in (
-        sorted(sys_block.iterdir(), key=lambda p: -len(p.name)) if sys_block.exists() else []
-    ):
+    for cand in sorted(sys_block.iterdir(), key=lambda p: -len(p.name)) if sys_block.exists() else []:
         if device.startswith(cand.name):
             try:
                 rot = (cand / "queue" / "rotational").read_text().strip()

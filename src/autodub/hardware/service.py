@@ -74,9 +74,7 @@ class HardwareService:
         return self.paths.root / "hardware.json"
 
     def output_dir(self) -> Path:
-        return (
-            Path(self.config.output_dir) if self.config.output_dir else self.paths.default_output()
-        )
+        return Path(self.config.output_dir) if self.config.output_dir else self.paths.default_output()
 
     # --- scanning -------------------------------------------------------------------------
 
@@ -159,9 +157,7 @@ class HardwareService:
 
     def reselect(self, tier: Tier) -> ProfileSelection:
         """Selection for a lower tier, used by OOM fallback (keeps user overrides out)."""
-        return select_profile(
-            self._require_report(), eco=self.config.hardware.eco_mode, forced_tier=tier
-        )
+        return select_profile(self._require_report(), eco=self.config.hardware.eco_mode, forced_tier=tier)
 
     def estimate_10min(self) -> tuple[int, int]:
         cal = self.state.calibration
@@ -201,9 +197,7 @@ class HardwareService:
         return self.state.report
 
 
-def bug_report_summary(
-    report: HardwareReport, sel: ProfileSelection, version: str
-) -> dict[str, Any]:
+def bug_report_summary(report: HardwareReport, sel: ProfileSelection, version: str) -> dict[str, Any]:
     """Hardware info for «Сообщить об ошибке». No paths, user names or serial numbers."""
     gpu = report.primary_gpu()
     return {
@@ -211,10 +205,7 @@ def bug_report_summary(
         "os": f"{report.os} {report.os_version}",
         "profile": sel.tier.value,
         "accelerator": sel.accelerator.value,
-        "gpu": (
-            f"{gpu.name} {gpu.vram_total_mb} MB, "
-            f"driver {gpu.driver_version}, CUDA {gpu.cuda_version}"
-        )
+        "gpu": (f"{gpu.name} {gpu.vram_total_mb} MB, driver {gpu.driver_version}, CUDA {gpu.cuda_version}")
         if gpu
         else "none",
         "cpu": f"{report.cpu.name} ({report.cpu.physical_cores}C/{report.cpu.logical_threads}T, "

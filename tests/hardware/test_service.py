@@ -39,9 +39,7 @@ def test_driver_change_triggers_rescan_and_invalidates_calibration(tmp_path: Pat
     svc = make_service(tmp_path, report)
     svc.scan()
     svc.set_calibration(
-        Calibration(
-            fingerprint=report.fingerprint(), measured_at="x", duration_s=1, speed_factor=2.0
-        )
+        Calibration(fingerprint=report.fingerprint(), measured_at="x", duration_s=1, speed_factor=2.0)
     )
     assert not svc.calibration_needed()
     new = make_report([nvidia(8192, driver="595.00")])

@@ -48,9 +48,7 @@ def scan(
     """Detect everything. Slow probes (PowerShell, ffmpeg, network) run in parallel."""
     warnings: list[str] = []
     with ThreadPoolExecutor(max_workers=6) as pool:
-        f_gpu = pool.submit(
-            _safe, lambda: detect_gpus(runner), list[GpuInfo](), "видеокарта", warnings
-        )
+        f_gpu = pool.submit(_safe, lambda: detect_gpus(runner), list[GpuInfo](), "видеокарта", warnings)
         f_enc = pool.submit(
             _safe,
             lambda: detect_encoders(ffmpeg, runner),

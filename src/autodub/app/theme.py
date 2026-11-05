@@ -27,6 +27,4 @@ def apply_theme(page: ft.Page, mode: str = "system", seed: str | None = None) ->
     color = seed or windows_accent() or DEFAULT_SEED
     page.theme = ft.Theme(color_scheme_seed=color, use_material3=True)
     page.dark_theme = ft.Theme(color_scheme_seed=color, use_material3=True)
-    page.theme_mode = {"light": ft.ThemeMode.LIGHT, "dark": ft.ThemeMode.DARK}.get(
-        mode, ft.ThemeMode.SYSTEM
-    )
+    page.theme_mode = {"light": ft.ThemeMode.LIGHT, "dark": ft.ThemeMode.DARK}.get(mode, ft.ThemeMode.SYSTEM)

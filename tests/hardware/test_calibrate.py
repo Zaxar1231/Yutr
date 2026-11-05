@@ -59,8 +59,6 @@ def test_gpu_bench_failure_is_reported_not_raised() -> None:
     assert out["error"] == "boom"
     ok = gpu_tflops(
         "python",
-        runner=lambda a, timeout=0: CmdResult(
-            0, 'log\n{"fp16_tflops": 40.1, "fp32_tflops": 20.0}\n', ""
-        ),
+        runner=lambda a, timeout=0: CmdResult(0, 'log\n{"fp16_tflops": 40.1, "fp32_tflops": 20.0}\n', ""),
     )
     assert ok["fp16_tflops"] == 40.1

@@ -57,9 +57,7 @@ def shoot(machine: str, theme: str, browser_path: str | None, *, expand: bool) -
             wait_port(port)
             with sync_playwright() as pw:
                 browser = pw.chromium.launch(executable_path=browser_path)
-                page = browser.new_page(
-                    viewport={"width": 1280, "height": 860}, device_scale_factor=2
-                )
+                page = browser.new_page(viewport={"width": 1280, "height": 860}, device_scale_factor=2)
                 page.goto(f"http://127.0.0.1:{port}/")
                 # Flutter draws into a canvas: wait for the first frame and for the
                 # startup snackbar ("Железо определено заново") to go away.

@@ -186,9 +186,7 @@ def test_amd_gpu_prefers_amf() -> None:
 def test_models_fit_tier_minimum_vram(tier: Tier) -> None:
     """Every set of models resident at the same time must fit the smallest card of the tier."""
     data = load_profile_data()
-    vram_mb = math.ceil(
-        data["thresholds"][tier.value] * GIB * (1 - data["thresholds"]["tolerance"])
-    )
+    vram_mb = math.ceil(data["thresholds"][tier.value] * GIB * (1 - data["thresholds"]["tolerance"]))
     sel = select_profile(make_report([nvidia(vram_mb)]))
     assert sel.tier == tier
     keys = model_keys(sel.settings)

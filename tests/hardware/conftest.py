@@ -38,9 +38,7 @@ def nvidia(
 
 
 def gpu(vendor: GpuVendor, name: str, vram_mb: int | None, *, integrated: bool = False) -> GpuInfo:
-    return GpuInfo(
-        vendor=vendor, name=name, vram_total_mb=vram_mb, integrated=integrated, source="registry"
-    )
+    return GpuInfo(vendor=vendor, name=name, vram_total_mb=vram_mb, integrated=integrated, source="registry")
 
 
 def make_report(
@@ -60,9 +58,7 @@ def make_report(
         os=os,
         os_version=os_version,
         gpus=gpus or [],
-        cpu=CpuInfo(
-            name="Test CPU", physical_cores=cores, logical_threads=threads, avx2=avx2, avx512=False
-        ),
+        cpu=CpuInfo(name="Test CPU", physical_cores=cores, logical_threads=threads, avx2=avx2, avx512=False),
         memory=MemoryInfo(total_mb=int(ram_gb * 1024), available_mb=int(ram_gb * 512)),
         encoders=encoders or EncoderInfo(ffmpeg_found=True),
         power=PowerInfo(has_battery=on_battery, on_battery=on_battery),

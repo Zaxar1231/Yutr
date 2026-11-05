@@ -52,6 +52,4 @@ def run(args: Sequence[str], *, timeout: float = 15.0) -> CmdResult | None:
 
 
 def powershell(script: str, *, runner: Runner = run, timeout: float = 20.0) -> CmdResult | None:
-    return runner(
-        ["powershell", "-NoProfile", "-NonInteractive", "-Command", script], timeout=timeout
-    )
+    return runner(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], timeout=timeout)

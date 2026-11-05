@@ -49,7 +49,5 @@ def detect_encoders(ffmpeg: str = "ffmpeg", runner: proc.Runner = proc.run) -> E
     if res is None or not res.ok:
         return EncoderInfo(ffmpeg_found=False)
     listed = listed_encoders(res.stdout)
-    found = {
-        key: codec in listed and probe(ffmpeg, codec, runner) for key, codec in CANDIDATES.items()
-    }
+    found = {key: codec in listed and probe(ffmpeg, codec, runner) for key, codec in CANDIDATES.items()}
     return EncoderInfo(ffmpeg_found=True, **found)
