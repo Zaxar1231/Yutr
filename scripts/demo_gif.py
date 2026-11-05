@@ -1,6 +1,6 @@
 """Record the demo GIF: paste a link → progress through the stages → result screen.
 
-    uv run python scripts/demo_gif.py --browser CHROMIUM --output OUT.mp4 --source SRC.mp4
+uv run python scripts/demo_gif.py --browser CHROMIUM --output OUT.mp4 --source SRC.mp4
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).parent))
-from screenshots import ROOT, free_port, wait_port  # noqa: E402
+from screenshots import ROOT, free_port, wait_port
 
 URL = "https://archive.org/details/GETLAMP-Eilers"
 
@@ -32,11 +32,14 @@ def main() -> None:
     frames = Path(tempfile.mkdtemp())
     with tempfile.TemporaryDirectory() as data:
         Path(data, "config.toml").write_text(
-            f'theme = "{args.theme}"\nfirst_run_done = true\n[hardware]\nnetwork_test = false\n', "utf-8")
+            f'theme = "{args.theme}"\nfirst_run_done = true\n[hardware]\nnetwork_test = false\n', "utf-8"
+        )
         env = os.environ | {
-            "AUTODUB_DATA_DIR": data, "AUTODUB_WEB_PORT": str(port),
+            "AUTODUB_DATA_DIR": data,
+            "AUTODUB_WEB_PORT": str(port),
             "AUTODUB_DEMO_HARDWARE": str(ROOT / "scripts" / "demo_hardware" / "rtx4070.json"),
-            "AUTODUB_DEMO_SIMULATE": "9", "AUTODUB_DEMO_SIM_OUTPUT": args.output,
+            "AUTODUB_DEMO_SIMULATE": "9",
+            "AUTODUB_DEMO_SIM_OUTPUT": args.output,
             "AUTODUB_DEMO_SIM_SOURCE": args.source or "",
         }
         app = subprocess.Popen([sys.executable, "-m", "autodub.app.main"], env=env)
@@ -78,12 +81,40 @@ def main() -> None:
             app.wait(10)
     out = ROOT / "docs" / "assets" / "demo.gif"
     pal = frames / "pal.png"
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "5", "-i", str(frames / "%04d.png"),
-                    "-vf", "scale=880:-1:flags=lanczos,palettegen=stats_mode=diff", str(pal)], check=True)
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "5", "-i", str(frames / "%04d.png"),
-                    "-i", str(pal), "-lavfi",
-                    "scale=880:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=4", str(out)],
-                   check=True)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-framerate",
+            "5",
+            "-i",
+            str(frames / "%04d.png"),
+            "-vf",
+            "scale=880:-1:flags=lanczos,palettegen=stats_mode=diff",
+            str(pal),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-loglevel",
+            "error",
+            "-framerate",
+            "5",
+            "-i",
+            str(frames / "%04d.png"),
+            "-i",
+            str(pal),
+            "-lavfi",
+            "scale=880:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=4",
+            str(out),
+        ],
+        check=True,
+    )
     shutil.rmtree(frames, ignore_errors=True)
     print(out.relative_to(ROOT), out.stat().st_size // 1024, "KB")
 

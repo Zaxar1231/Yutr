@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import zipfile
 from pathlib import Path
 from typing import ClassVar
@@ -115,6 +116,12 @@ def launcher(install: Path, data: Path, action: str, report: Path, extra: dict[s
     env.pop("VIRTUAL_ENV", None)
     report.unlink(missing_ok=True)
     code = subprocess.run([sys.executable, str(install / "launcher.pyw")], env=env, timeout=1800).returncode
+    # The launcher returns as soon as the app reports a healthy start; the app keeps running
+    # (here: checks for updates) and writes its report a moment later.
+    deadline = time.monotonic() + 180
+    while action != "crash" and not report.exists() and time.monotonic() < deadline:
+        time.sleep(0.5)
+    time.sleep(1.0)  # let the app finish writing
     if not report.exists():
         log = data / "logs" / "launcher.log"
         print(log.read_text("utf-8")[-6000:] if log.exists() else "no launcher log", flush=True)
@@ -140,6 +147,7 @@ def main() -> None:
     (install / "current").write_text("0.1.0", "utf-8")
 
     # fake GitHub with v0.1.1
+    shutil.rmtree(work / "build011", ignore_errors=True)
     v011 = build_version(work / "build011", "0.1.1")
     sha = zip_dir(v011, srv / "Autodub-0.1.1-update.zip")
     (srv / "checksums.txt").write_text(f"{sha}  Autodub-0.1.1-update.zip\n", "utf-8")

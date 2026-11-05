@@ -107,13 +107,25 @@ class JobQueue:
             for k in range(1, steps + 1):
                 frac = k / steps
                 remaining = speed * (1 - (done + st.weight * frac) / total) * 40
-                self.apply_event(job, {"event": "progress", "stage": st.name, "title": st.title, "index": i,
-                                       "count": len(STAGES), "fraction": frac,
-                                       "overall": (done + st.weight * frac) / total, "eta": remaining})
+                self.apply_event(
+                    job,
+                    {
+                        "event": "progress",
+                        "stage": st.name,
+                        "title": st.title,
+                        "index": i,
+                        "count": len(STAGES),
+                        "fraction": frac,
+                        "overall": (done + st.weight * frac) / total,
+                        "eta": remaining,
+                    },
+                )
                 time.sleep(0.25)
             done += st.weight
-        self.apply_event(job, {"event": "done", "output": os.environ.get("AUTODUB_DEMO_SIM_OUTPUT", "demo [RU].mp4"),
-                               "source": os.environ.get("AUTODUB_DEMO_SIM_SOURCE")})
+        output = os.environ.get("AUTODUB_DEMO_SIM_OUTPUT", "demo [RU].mp4")
+        self.apply_event(
+            job, {"event": "done", "output": output, "source": os.environ.get("AUTODUB_DEMO_SIM_SOURCE")}
+        )
 
     def active(self) -> Job | None:
         return next((j for j in self.jobs if j.status in ("running", "paused")), None)
