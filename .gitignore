@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build
+build/
+dist/
+installer/Output/
+
+# Runtime data (never commit models, caches, user output)
+/models/
+/cache/
+/output/
+/logs/
+*.log
+/data/
+/bin/
+
+# Media used for local testing
+*.mp4
+*.mkv
+*.webm
+*.wav
+*.flac
+*.mp3
+!docs/assets/**
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,177 @@
+# Performance profiles. Generic per-tier values, nothing here is tied to a specific PC.
+#
+# VRAM/RAM figures in [models] are starting estimates. The guard replaces them with peaks
+# measured on this machine (stored in config.toml, [learned.model_peaks_mb]) after the first
+# real run of each model, so wrong estimates heal themselves.
+#
+# rtf = processing seconds per second of audio on hardware typical for the tier.
+# Calibration multiplies them by the measured speed factor of this machine.
+
+schema = 1
+
+[thresholds]
+# Minimum total VRAM in GiB. Compared with a 5 % tolerance because cards report slightly
+# less than the marketing size (a "12 GB" card shows ~11.99 GiB).
+ultra = 12
+high = 8
+medium = 6
+low = 4
+tolerance = 0.05
+# A GPU tier also needs enough system RAM to stage models; otherwise it is lowered.
+min_ram_gb = { ultra = 16, high = 12, medium = 8, low = 8 }
+
+[tiers.ultra]
+whisper_model = "large-v3"
+whisper_compute_type = "float16"
+whisper_batch_size = 16
+align_on_gpu = true
+demucs_model = "htdemucs_ft"
+demucs_segment = 7.8
+demucs_shifts = 2
+tts_precision = "fp16"
+tts_model = "xtts_v2"
+keep_models_loaded = true
+translate_offline_compute_type = "int8_float16"
+translate_offline_on_gpu = true
+rtf = { separate = 0.10, asr = 0.04, align = 0.01, translate = 0.02, tts = 0.20, mix = 0.02 }
+
+[tiers.high]
+whisper_model = "large-v3-turbo"
+whisper_compute_type = "float16"
+whisper_batch_size = 8
+align_on_gpu = true
+demucs_model = "htdemucs_ft"
+demucs_segment = 7.8
+demucs_shifts = 1
+tts_precision = "fp16"
+tts_model = "xtts_v2"
+keep_models_loaded = false
+translate_offline_compute_type = "int8_float16"
+translate_offline_on_gpu = true
+rtf = { separate = 0.10, asr = 0.04, align = 0.02, translate = 0.03, tts = 0.30, mix = 0.02 }
+
+[tiers.medium]
+whisper_model = "large-v3-turbo"
+whisper_compute_type = "int8_float16"
+whisper_batch_size = 4
+align_on_gpu = true
+demucs_model = "htdemucs"
+demucs_segment = 7.0
+demucs_shifts = 1
+tts_precision = "fp16"
+tts_model = "xtts_v2"
+keep_models_loaded = false
+translate_offline_compute_type = "int8_float16"
+translate_offline_on_gpu = true
+rtf = { separate = 0.06, asr = 0.06, align = 0.02, translate = 0.04, tts = 0.45, mix = 0.02 }
+
+[tiers.low]
+whisper_model = "medium"
+whisper_compute_type = "int8_float16"
+whisper_batch_size = 2
+align_on_gpu = true
+demucs_model = "htdemucs"
+demucs_segment = 4.0
+demucs_shifts = 0
+tts_precision = "fp16"
+tts_model = "xtts_v2"
+keep_models_loaded = false
+translate_offline_compute_type = "int8"
+translate_offline_on_gpu = false
+rtf = { separate = 0.08, asr = 0.08, align = 0.03, translate = 0.25, tts = 0.70, mix = 0.02 }
+
+[tiers.cpu]
+# whisper_model is chosen between small and medium from the CPU itself (see selector).
+whisper_model = "small"
+whisper_compute_type = "int8"
+whisper_batch_size = 1
+align_on_gpu = false
+demucs_model = "htdemucs"
+demucs_segment = 7.0
+demucs_shifts = 0
+tts_precision = "fp32"
+tts_model = "xtts_v2"
+keep_models_loaded = false
+translate_offline_compute_type = "int8"
+translate_offline_on_gpu = false
+rtf = { separate = 1.0, asr = 0.5, align = 0.15, translate = 0.25, tts = 4.0, mix = 0.03 }
+
+[cpu_whisper_medium]
+# CPU-only: medium is used instead of small when the CPU is strong enough.
+min_physical_cores = 8
+min_ram_gb = 16
+requires_avx2 = true
+
+[network]
+# yt-dlp --concurrent-fragments and aria2c -x by measured download speed (Mbit/s).
+default_fragments = 8
+steps = [
+    { below_mbit = 20, fragments = 4 },
+    { below_mbit = 100, fragments = 8 },
+    { below_mbit = 1.0e9, fragments = 16 },
+]
+aria2_max_connections = 16
+
+[eco]
+# Battery-saver: one tier lower and at most half of the physical cores.
+tier_steps_down = 1
+thread_fraction = 0.5
+
+# Resource needs while the model runs: vram_mb on GPU, ram_mb in system RAM,
+# disk_mb on disk. Keys match the model names used in tiers.
+[models."whisper:large-v3:float16"]
+vram_mb = 6500
+ram_mb = 3000
+disk_mb = 3100
+[models."whisper:large-v3-turbo:float16"]
+vram_mb = 3500
+ram_mb = 2500
+disk_mb = 1600
+[models."whisper:large-v3-turbo:int8_float16"]
+vram_mb = 2200
+ram_mb = 2500
+disk_mb = 1600
+[models."whisper:medium:int8_float16"]
+vram_mb = 1400
+ram_mb = 2000
+disk_mb = 1500
+[models."whisper:medium:int8"]
+vram_mb = 0
+ram_mb = 2500
+disk_mb = 1500
+[models."whisper:small:int8"]
+vram_mb = 0
+ram_mb = 1200
+disk_mb = 480
+[models."demucs:htdemucs_ft"]
+vram_mb = 3000
+ram_mb = 3000
+disk_mb = 330
+[models."demucs:htdemucs"]
+vram_mb = 2200
+ram_mb = 2500
+disk_mb = 85
+[models."mdx:UVR-MDX-NET-Voc_FT"]
+vram_mb = 0  # runs through DirectML, which manages memory itself
+ram_mb = 2000
+disk_mb = 70
+[models."align:wav2vec2"]
+vram_mb = 1200
+ram_mb = 1500
+disk_mb = 1300
+[models."tts:xtts_v2"]
+vram_mb = 3000
+ram_mb = 4000
+disk_mb = 1900
+[models."tts:f5_tts_ru"]
+vram_mb = 3200
+ram_mb = 4000
+disk_mb = 1400
+[models."translate:madlad400-3b"]
+vram_mb = 3600
+ram_mb = 4500
+disk_mb = 3000
+[models."diarize:pyannote-community-1"]
+vram_mb = 1500
+ram_mb = 2000
+disk_mb = 50
