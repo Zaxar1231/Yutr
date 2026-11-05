@@ -113,7 +113,7 @@ SETTINGS: dict[str, SettingMeta] = {
         "Голосовая модель, которая говорит по-русски голосом спикера.",
         "choice",
         "Озвучка",
-        {"xtts_v2": "XTTS-v2", "f5_tts_ru": "F5-TTS (русская)"},
+        {"xtts_v2": "XTTS-v2", "f5_tts_ru": "F5-TTS (русская, только с видеокартой)"},
     ),
     "tts_precision": SettingMeta(
         "Точность озвучки",

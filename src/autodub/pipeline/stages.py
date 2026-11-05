@@ -36,6 +36,7 @@ from autodub.pipeline.translate import make_translator
 log = logging.getLogger(__name__)
 _CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 SR_OUT = 48000
+F5_MAX_REF = 10.0  # seconds; F5-TTS truncates longer references
 
 
 @dataclass
@@ -523,10 +524,26 @@ def run_refs(ctx: JobContext) -> dict[str, Any]:
         ref = ref / (np.abs(ref).max() + 1e-6) * 0.9
         path = refs_dir / f"{spk}.wav"
         sf.write(str(path), ref, sr, subtype="FLOAT")
+        # F5-TTS clips its reference to ~12 s; the reference text must match the audio exactly,
+        # otherwise it keeps "reading" the reference. Give it a separate short reference.
+        short: list[Phrase] = []
+        for p in sorted(chosen, key=lambda q: -q.duration):
+            if sum(q.duration for q in short) + p.duration <= F5_MAX_REF:
+                short.append(p)
+        short = sorted(short, key=lambda q: q.start) or chosen[:1]
+        sparts: list[np.ndarray] = []
+        for p in short:
+            sparts += [clip(p)[: int(F5_MAX_REF * sr)], gap]
+        sref = np.concatenate(sparts)[: int((F5_MAX_REF + 0.5) * sr)]
+        sref = sref / (np.abs(sref).max() + 1e-6) * 0.9
+        spath = refs_dir / f"{spk}_short.wav"
+        sf.write(str(spath), sref, sr, subtype="FLOAT")
         speakers[spk] = {
             "wav": str(path.relative_to(ctx.workdir)),
             "text": " ".join(p.source for p in chosen),
             "seconds": round(len(ref) / sr, 1),
+            "short_wav": str(spath.relative_to(ctx.workdir)),
+            "short_text": " ".join(p.source for p in short),
         }
     # Per-phrase clips carry the original intonation into the synthesis.
     for p in phrases:
@@ -556,6 +573,7 @@ def _tts_items(
         if ctx.options.prosody_from_phrase and prosody.exists():
             item["prosody_ref"] = str(prosody)
             item["prosody_text"] = p.source
+            item["prosody_seconds"] = p.duration
         items.append(item)
     return items
 
@@ -586,8 +604,8 @@ def synthesize(
         params = common | {
             "ckpt_file": str(f5 / "F5TTS_v1_Base_v2" / "model_last_inference.safetensors"),
             "vocab_file": str(f5 / "F5TTS_v1_Base" / "vocab.txt"),
-            "speaker_refs": {k: str(ctx.workdir / v["wav"]) for k, v in speakers.items()},
-            "speaker_texts": {k: v["text"] for k, v in speakers.items()},
+            "speaker_refs": {k: str(ctx.workdir / v["short_wav"]) for k, v in speakers.items()},
+            "speaker_texts": {k: v["short_text"] for k, v in speakers.items()},
             "hf_cache_dir": str(ctx.rt.models_dir / "hf"),
         }
         res = _engine_call(ctx, "tts_f5", params, "tts:f5_tts_ru", on_gpu=s.tts_device == "cuda")
@@ -917,7 +935,7 @@ STAGES: list[Stage] = [
         lambda c: {"t": c.options.translator, "m": c.options.claude_model},
         heavy=True,
     ),
-    Stage("refs", "Образцы голоса", 0.01, run_refs, lambda c: {"v": 1}),
+    Stage("refs", "Образцы голоса", 0.01, run_refs, lambda c: {"v": 2}),
     Stage(
         "tts",
         "Озвучка",

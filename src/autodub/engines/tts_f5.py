@@ -53,7 +53,8 @@ def run(params: dict[str, Any], progress: Any) -> dict[str, Any]:
     durations: dict[str, float] = {}
     for i, item in enumerate(items):
         ref, ref_text = item.get("prosody_ref"), item.get("prosody_text")
-        if not ref:
+        # A phrase clip is a valid reference only if it is long enough to carry the voice.
+        if not ref or float(item.get("prosody_seconds", 0)) < 3.0:
             ref, ref_text = params["speaker_refs"][item["speaker"]], params["speaker_texts"][item["speaker"]]
         wav, sr, _ = tts.infer(
             ref,
