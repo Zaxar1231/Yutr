@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+  <title>Автодубляж</title>
+  <rect width="1280" height="320" rx="28" fill="#EEF2F9"/>
+  <g transform="translate(72 64) scale(0.375)">
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="#1F5FAE"/>
+  <path d="M120 128h232a56 56 0 0 1 56 56v120a56 56 0 0 1-56 56H236l-76 62v-62h-40a56 56 0 0 1-56-56V184a56 56 0 0 1 56-56z"
+        fill="#FFFFFF"/>
+  <g fill="#1F5FAE">
+    <rect x="128" y="218" width="18" height="52" rx="9"/>
+    <rect x="160" y="196" width="18" height="96" rx="9"/>
+    <rect x="192" y="226" width="18" height="36" rx="9"/>
+    <rect x="224" y="206" width="18" height="76" rx="9"/>
+  </g>
+  <text x="330" y="292" text-anchor="middle" font-family="Roboto, 'Segoe UI', Arial, sans-serif"
+        font-weight="700" font-size="120" fill="#F2A541">Я</text>
+  </g>
+  <text x="300" y="150" font-family="Roboto, 'Segoe UI', Arial, sans-serif" font-size="68" font-weight="700" fill="#1A1C20">Автодубляж</text>
+  <text x="302" y="206" font-family="Roboto, 'Segoe UI', Arial, sans-serif" font-size="30" fill="#44474E">Дубляж видео на русский голосом оригинального спикера</text>
+  <text x="302" y="252" font-family="Roboto, 'Segoe UI', Arial, sans-serif" font-size="22" fill="#1F5FAE">Локально · Автонастройка под железо · Whisper · XTTS / F5-TTS · Claude</text>
+</svg>

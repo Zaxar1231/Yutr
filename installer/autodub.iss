@@ -84,9 +84,9 @@ var
 begin
   Dir := DataDir();
   StringChangeEx(Dir, '\', '\\', True);
-  { uv keeps its Python and cache inside our data folder: the system Python is never touched. }
-  Cfg := 'python-install-dir = "' + Dir + '\\python"' + #13#10 +
-         'cache-dir = "' + Dir + '\\cache\\uv"' + #13#10 +
+  { uv keeps its download cache in our data folder and uses only its own managed Python
+    (in the user's uv folder): the system Python is never used or modified. }
+  Cfg := 'cache-dir = "' + Dir + '\\cache\\uv"' + #13#10 +
          'python-preference = "only-managed"' + #13#10;
   SaveStringToFile(ExpandConstant('{app}\uv.toml'), Cfg, False);
 end;

@@ -1,0 +1,37 @@
+name: Ошибка
+description: Что-то работает не так
+title: "[Ошибка] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо, что сообщили! Быстрее всего — кнопка **«Сообщить об ошибке»** в «О программе»: она сама заполнит блок «Моя система» (без личных данных).
+  - type: textarea
+    id: what
+    attributes:
+      label: Что случилось
+      description: Что вы делали, что ожидали и что получилось. Ссылку на видео приложите, если она публичная.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как повторить
+      placeholder: |
+        1. Вставил ссылку …
+        2. Нажал «Перевести» …
+  - type: textarea
+    id: system
+    attributes:
+      label: Моя система
+      description: Отчёт из программы («О программе» → «Сообщить об ошибке») или вывод `autodub doctor`.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Журнал
+      description: Последние строки `%LOCALAPPDATA%\Autodub\logs\autodub.log` (проверьте, что там нет личного).
+      render: text

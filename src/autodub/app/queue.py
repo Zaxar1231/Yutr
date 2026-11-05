@@ -88,8 +88,32 @@ class JobQueue:
             self.jobs.append(job)
             self.save()
         self.on_change(job)
-        self.kick()
+        if os.environ.get("AUTODUB_DEMO_SIMULATE"):
+            threading.Thread(target=self._simulate, args=(job,), daemon=True).start()
+        else:
+            self.kick()
         return job
+
+    def _simulate(self, job: Job) -> None:
+        """Screenshots/GIF only: walk the job through the real stage list without doing work."""
+        from autodub.pipeline.stages import STAGES
+
+        job.status = "running"
+        total = sum(s.weight for s in STAGES)
+        done = 0.0
+        speed = float(os.environ.get("AUTODUB_DEMO_SIMULATE", "8"))  # seconds for the whole job
+        for i, st in enumerate(STAGES):
+            steps = max(2, int(st.weight / total * speed * 4))
+            for k in range(1, steps + 1):
+                frac = k / steps
+                remaining = speed * (1 - (done + st.weight * frac) / total) * 40
+                self.apply_event(job, {"event": "progress", "stage": st.name, "title": st.title, "index": i,
+                                       "count": len(STAGES), "fraction": frac,
+                                       "overall": (done + st.weight * frac) / total, "eta": remaining})
+                time.sleep(0.25)
+            done += st.weight
+        self.apply_event(job, {"event": "done", "output": os.environ.get("AUTODUB_DEMO_SIM_OUTPUT", "demo [RU].mp4"),
+                               "source": os.environ.get("AUTODUB_DEMO_SIM_SOURCE")})
 
     def active(self) -> Job | None:
         return next((j for j in self.jobs if j.status in ("running", "paused")), None)

@@ -143,10 +143,8 @@ def run_step(cmd: list[str], splash: Splash) -> None:
 
 
 def uv_env() -> dict[str, str]:
-    """Keep uv's Python and cache inside our folders; never touch the system Python."""
-    d = data_root()
-    return {"UV_PYTHON_INSTALL_DIR": str(d / "python"), "UV_CACHE_DIR": str(d / "cache" / "uv"),
-            "UV_PYTHON_PREFERENCE": "only-managed"}
+    """uv-managed Python only (never the system one); download cache inside our data folder."""
+    return {"UV_CACHE_DIR": str(data_root() / "cache" / "uv"), "UV_PYTHON_PREFERENCE": "only-managed"}
 
 
 def ensure_core_env(version: str) -> Path:
