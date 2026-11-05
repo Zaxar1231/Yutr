@@ -50,7 +50,7 @@ def _load(model_dir: str, dev: str, fp16: bool) -> Any:
     os.environ.setdefault("COQUI_TOS_AGREED", "1")  # the user accepts CPML in the app UI
     cfg = XttsConfig()
     cfg.load_json(str(Path(model_dir) / "config.json"))
-    model = Xtts.init_from_config(cfg)
+    model = Xtts(cfg)  # init_from_config is deprecated in coqui-tts 0.28
     model.load_checkpoint(cfg, checkpoint_dir=model_dir, use_deepspeed=False)
     model.to(dev)
     model.eval()

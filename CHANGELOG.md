@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-11-05
+
+### Исправлено
+- Озвучка XTTS-v2: модель создаётся без устаревшего `init_from_config`, без предупреждения
+  в журнале и с совместимостью с будущими версиями coqui-tts.
+- Поле ссылки на главном экране больше не использует устаревший параметр Flet.
+
 ## [0.1.0] — 2026-11-05
 
 ### Добавлено
@@ -21,5 +28,6 @@
 - Установщик Inno Setup без прав администратора, портативный режим, автообновление из GitHub Releases
   с откатом.
 
-[Unreleased]: https://github.com/Zaxar1231/Yutr/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Zaxar1231/Yutr/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Zaxar1231/Yutr/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Zaxar1231/Yutr/releases/tag/v0.1.0
