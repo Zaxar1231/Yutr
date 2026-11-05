@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 import urllib.error
 import urllib.request
@@ -20,7 +21,7 @@ from typing import Any
 from autodub.updater.semver import Version
 
 log = logging.getLogger(__name__)
-API = "https://api.github.com"
+API = os.environ.get("AUTODUB_GITHUB_API", "https://api.github.com")
 
 
 @dataclass

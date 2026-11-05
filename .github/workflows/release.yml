@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Version from pyproject must match the tag
+        shell: pwsh
+        run: |
+          $ver = (uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])").Trim()
+          $tag = "${{ github.ref_name }}".TrimStart("v")
+          if ($ver -ne $tag) { throw "pyproject version $ver does not match tag $tag" }
+          "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Tests
+        run: uv run pytest -q
+      - name: Build update archive and installer
+        shell: pwsh
+        run: |
+          uv run python scripts/build_release.py
+          choco install innosetup --no-progress -y
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Qp "/DAppVersion=$env:VERSION" "/DStageDir=..\build\stage" "/DOutputDir=..\dist" installer\autodub.iss
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Push-Location dist
+          Get-ChildItem -File | Where-Object Name -ne "checksums.txt" | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content -Encoding ascii checksums.txt
+          Get-Content checksums.txt
+          Pop-Location
+      - name: Changelog from commits since the previous tag
+        shell: bash
+        run: |
+          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          range=${prev:+$prev..}${GITHUB_REF_NAME}
+          {
+            echo "## Изменения"
+            for type in feat fix perf; do
+              lines=$(git log --format='%s' $range | grep -E "^${type}(\(.+\))?!?:" || true)
+              [ -z "$lines" ] && continue
+              case $type in feat) echo "### Новое";; fix) echo "### Исправлено";; perf) echo "### Быстрее";; esac
+              echo "$lines" | sed -E 's/^[a-z]+(\([^)]*\))?!?: /- /'
+            done
+            echo
+            echo "Установщик: \`Autodub-Setup-${VERSION}.exe\`. Программа обновится сама, если она уже установлена."
+          } > notes.md
+          cat notes.md
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          [[ "$GITHUB_REF_NAME" == *-* ]] && flags="--prerelease"
+          gh release create "$GITHUB_REF_NAME" dist/* --title "Автодубляж ${VERSION}" --notes-file notes.md $flags

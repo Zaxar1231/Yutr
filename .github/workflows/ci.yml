@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test:
+    name: Lint, types, tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Ruff
+        run: |
+          uv run ruff check src tests scripts
+          uv run ruff format --check src tests scripts
+      - name: Mypy
+        run: uv run mypy
+      - name: Pytest
+        run: uv run pytest -q
+
+  windows:
+    name: Tests, update cycle, installer (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Pytest
+        run: uv run pytest -q
+      - name: Install → update → rollback (real launcher and uv bootstrap)
+        run: uv run python scripts/e2e_update.py --workdir "${{ runner.temp }}\e2e"
+      - name: Build installer
+        shell: pwsh
+        run: |
+          uv run python scripts/build_release.py
+          choco install innosetup --no-progress -y
+          $ver = (uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])").Trim()
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Qp "/DAppVersion=$ver" "/DStageDir=..\build\stage" "/DOutputDir=..\dist" installer\autodub.iss
+      - name: Silent install and first start on a clean user profile
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\Autodub-Setup-*.exe | Select-Object -First 1
+          $dir = "$env:RUNNER_TEMP\AutodubInstall"
+          Start-Process $setup.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/CURRENTUSER","/DIR=$dir","/TASKS=" -Wait
+          if (!(Test-Path "$dir\current")) { throw "install failed: no current pointer" }
+          $env:AUTODUB_LAUNCH_MODULE = "autodub.updater.selftest"
+          $env:AUTODUB_LAUNCHER_HEADLESS = "1"
+          $env:AUTODUB_SELFTEST_REPORT = "$env:RUNNER_TEMP\selftest.json"
+          & "$dir\uv.exe" --config-file "$dir\uv.toml" run --python 3.12 --no-project "$dir\launcher.pyw"
+          if ($LASTEXITCODE -ne 0) { Get-Content "$env:LOCALAPPDATA\Autodub\logs\launcher.log"; throw "first start failed" }
+          Get-Content $env:AUTODUB_SELFTEST_REPORT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-preview
+          path: dist/*
+          retention-days: 7

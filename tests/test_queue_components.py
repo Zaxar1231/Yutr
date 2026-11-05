@@ -12,8 +12,19 @@ def test_queue_events_and_persistence(tmp_path: Path, monkeypatch) -> None:
     q = JobQueue(tmp_path / "q.json", changes.append)
     job = q.add(JobOptions(url="https://example.com/v"))
     assert job.status == "queued" and changes
-    final = q.apply_event(job, {"event": "progress", "stage": "tts", "title": "Озвучка", "index": 10,
-                                "count": 14, "fraction": 0.5, "overall": 0.7, "eta": 30})
+    final = q.apply_event(
+        job,
+        {
+            "event": "progress",
+            "stage": "tts",
+            "title": "Озвучка",
+            "index": 10,
+            "count": 14,
+            "fraction": 0.5,
+            "overall": 0.7,
+            "eta": 30,
+        },
+    )
     assert not final and job.stage_title == "Озвучка" and job.eta == 30
     assert q.apply_event(job, {"event": "done", "output": str(tmp_path / "x [RU].mp4")})
     assert job.status == "done" and job.title == "x [RU]"
@@ -24,8 +35,7 @@ def test_queue_events_and_persistence(tmp_path: Path, monkeypatch) -> None:
 
 def test_interrupted_job_is_requeued(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.delenv("AUTODUB_DEMO_HARDWARE", raising=False)
-    (tmp_path / "q.json").write_text(
-        '[{"id": "a", "options": {"url": "u"}, "status": "running"}]', "utf-8")
+    (tmp_path / "q.json").write_text('[{"id": "a", "options": {"url": "u"}, "status": "running"}]', "utf-8")
     q = JobQueue(tmp_path / "q.json", lambda j: None)
     assert q.jobs[0].status == "queued"
 
@@ -46,7 +56,14 @@ def test_checksum_sources(monkeypatch) -> None:
 def test_manifest_is_complete() -> None:
     for b in manifest.binaries().values():
         assert b.sha256 or b.checksums, b.key  # every download is verified
-    for key in ("whisper:large-v3", "whisper:large-v3-turbo", "whisper:medium", "whisper:small",
-                "tts:xtts_v2", "tts:f5_tts_ru", "translate:madlad400-3b"):
+    for key in (
+        "whisper:large-v3",
+        "whisper:large-v3-turbo",
+        "whisper:medium",
+        "whisper:small",
+        "tts:xtts_v2",
+        "tts:f5_tts_ru",
+        "translate:madlad400-3b",
+    ):
         assert key in manifest.models()
     assert manifest.models()["tts:xtts_v2"].noncommercial
