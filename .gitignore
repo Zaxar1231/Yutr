@@ -39,3 +39,4 @@ Thumbs.db
 .idea/
 .vscode/
 !src/autodub/hardware/data/*.flac
+!docs/tts-compare/*.wav

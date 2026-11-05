@@ -51,3 +51,6 @@ Windows-часть проверялась в GitHub Actions на `windows-latest
 похожесть спикера (WeSpeaker), RTF, плюс страница слепого прослушивания
 `docs/tts-compare/index.html`. Результаты на CPU — в `docs/tts-compare/results.json`.
 Естественность на слух оцените сами по слепой странице: скрипт метрик этого не заменяет.
+
+Итог на CPU: XTTS-v2 — WER 0,017, похожесть 0,47, RTF 2,5; F5-TTS RU — WER 0,021, похожесть 0,54,
+RTF 27. Подробности и выводы — в [tts-compare/README.md](tts-compare/README.md).
