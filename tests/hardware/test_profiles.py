@@ -219,3 +219,12 @@ def test_estimates_grow_down_the_tiers() -> None:
 def test_faster_machine_gets_shorter_estimate() -> None:
     sel = select_profile(make_report([nvidia(8192)]))
     assert estimate_minutes(sel, speed_factor=2)[1] < estimate_minutes(sel)[1]
+
+
+def test_every_setting_has_ui_description() -> None:
+    from autodub.hardware.profiles import ProfileSettings
+    from autodub.hardware.settings_meta import SETTINGS
+
+    assert set(SETTINGS) == set(ProfileSettings.model_fields)
+    for meta in SETTINGS.values():
+        assert meta.description and meta.label

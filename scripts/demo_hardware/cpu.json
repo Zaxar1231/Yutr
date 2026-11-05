@@ -1,0 +1,60 @@
+{
+ "os": "Windows",
+ "os_version": "10.0.19045",
+ "gpus": [
+  {
+   "vendor": "intel",
+   "name": "Intel(R) UHD Graphics 630",
+   "vram_total_mb": 128,
+   "vram_free_mb": null,
+   "driver_version": null,
+   "cuda_version": null,
+   "compute_capability": null,
+   "integrated": true,
+   "source": "registry"
+  }
+ ],
+ "cpu": {
+  "name": "Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz",
+  "physical_cores": 6,
+  "logical_threads": 12,
+  "avx2": true,
+  "avx512": false
+ },
+ "memory": {
+  "total_mb": 16384,
+  "available_mb": 8192
+ },
+ "disks": [
+  {
+   "role": "models",
+   "path": "C:/Users/User/AppData/Local/Autodub/models",
+   "free_mb": 412000,
+   "total_mb": 953000,
+   "kind": "ssd"
+  },
+  {
+   "role": "output",
+   "path": "D:/Видео/Автодубляж",
+   "free_mb": 1210000,
+   "total_mb": 1907000,
+   "kind": "hdd"
+  }
+ ],
+ "encoders": {
+  "nvenc": false,
+  "qsv": true,
+  "amf": false,
+  "ffmpeg_found": true
+ },
+ "power": {
+  "has_battery": false,
+  "on_battery": false,
+  "percent": null
+ },
+ "network": {
+  "mbit_per_s": 45.0
+ },
+ "warnings": [],
+ "scanned_at": "2026-11-05T21:30:00+00:00"
+}
