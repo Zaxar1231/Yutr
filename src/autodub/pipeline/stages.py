@@ -668,6 +668,24 @@ def _fade(x: np.ndarray, ms: float = 15) -> np.ndarray:
     return x
 
 
+def soft_cut(clip: Any, keep_s: float, sr: int = SR_OUT, search_s: float = 1.2) -> Any:
+    """Cut a clip that does not fit at the quietest point (a gap between words) before ``keep_s``.
+
+    Used only as the last resort, so speech is never chopped mid-word.
+    """
+    n = int(keep_s * sr)
+    if len(clip) <= n:
+        return clip
+    win = int(0.03 * sr)
+    lo = max(win, n - int(search_s * sr))
+    best, best_e = n, float("inf")
+    for i in range(lo, n - win, win // 2):
+        e = float(np.mean(clip[i : i + win] ** 2))
+        if e <= best_e:  # latest quiet point wins: keep as much speech as possible
+            best, best_e = i + win // 2, e
+    return clip[:best]
+
+
 def run_mix(ctx: JobContext) -> dict[str, Any]:
     tools = ctx.rt.tools
     duration = ctx.result("audio")["duration"]
@@ -675,7 +693,7 @@ def run_mix(ctx: JobContext) -> dict[str, Any]:
     voice = np.zeros(n, dtype=np.float32)
     for pl in ctx.result("fit")["placements"]:
         clip, _sr = sf.read(str(ctx.path("fit") / f"{pl['id']}.wav"), dtype="float32")
-        clip = _fade(clip[: int(pl["duration"] * SR_OUT)].copy())
+        clip = _fade(soft_cut(clip, pl["duration"]).copy())
         a = int(pl["start"] * SR_OUT)
         voice[a : a + len(clip)] += clip[: max(0, n - a)]
     # Mixed videos: Russian phrases keep the original voice.
@@ -905,12 +923,20 @@ STAGES: list[Stage] = [
         "Озвучка",
         0.45,
         run_tts,
-        lambda c: {"e": c.options.tts_engine or c.settings.tts_model, "p": c.options.prosody_from_phrase},
+        lambda c: {
+            "e": c.options.tts_engine or c.settings.tts_model,
+            "p": c.options.prosody_from_phrase,
+            "v": 2,
+        },
         heavy=True,
     ),
     Stage("fit", "Подгонка тайминга", 0.04, run_fit, lambda c: {"v": 1}),
     Stage(
-        "mix", "Сведение", 0.02, run_mix, lambda c: {"mode": c.options.mode, "vol": c.options.original_volume}
+        "mix",
+        "Сведение",
+        0.02,
+        run_mix,
+        lambda c: {"mode": c.options.mode, "vol": c.options.original_volume, "v": 2},
     ),
     Stage("mux", "Сборка видео", 0.02, run_mux, lambda c: {"out": c.options.output_dir}),
 ]

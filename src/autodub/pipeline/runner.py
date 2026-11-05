@@ -59,12 +59,12 @@ class Runner:
         self._skipped_weight = 0.0
 
     def _emit(self, idx: int, st: Stage, frac: float, msg: str) -> None:
-        overall = (self._done_weight + st.weight * frac) / self.total_weight
+        overall = min(1.0, (self._done_weight + st.weight * frac) / self.total_weight)
         worked = (self._done_weight - self._skipped_weight + st.weight * frac) / self.total_weight
         elapsed = time.monotonic() - self._started
         eta = None
         if worked > 0.02 and elapsed > 5:
-            eta = elapsed / worked * (1 - overall)
+            eta = max(0.0, elapsed / worked * (1 - overall))
         self.on_progress(Progress(st.name, st.title, idx, len(self.stages), frac, overall, msg, eta))
 
     def _stage_progress(self, idx: int, st: Stage) -> Callable[[str, float, str], None]:
@@ -82,9 +82,9 @@ class Runner:
             key = st.key(ctx)
             if not rerun and ctx.cached(st.name, key) is not None:
                 log.info("stage %s: cached", st.name)
+                self._emit(idx, st, 1.0, "Готово (из кэша)")
                 self._done_weight += st.weight
                 self._skipped_weight += st.weight
-                self._emit(idx, st, 1.0, "Готово (из кэша)")
                 self._after(st)
                 continue
             rerun = True  # every later stage depends on this one
@@ -106,11 +106,12 @@ class Runner:
             files = sorted(_snapshot(ctx.workdir) - before - {"state.json", "state.tmp"})
             ctx.store(st.name, key, result, files)
             log.info("stage %s done in %.1fs", st.name, time.monotonic() - t0)
-            self._done_weight += st.weight
             self._emit(idx, st, 1.0, "Готово")
+            self._done_weight += st.weight
             self._after(st)
         mux = ctx.result("mux")
-        return JobResult("done", mux["output"], {"fit": ctx.result("fit"), **mux})
+        fit = ctx.state.get("fit", {}).get("result", {})
+        return JobResult("done", mux.get("output"), {"fit": fit, **mux})
 
     def _after(self, st: Stage) -> None:
         if st.name == "langid":

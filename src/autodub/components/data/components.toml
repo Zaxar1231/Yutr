@@ -1,0 +1,93 @@
+# Components the app downloads and keeps up to date by itself.
+# Checksums: binaries are verified against the publisher's checksum file or a pinned hash;
+# Hugging Face files against the LFS SHA-256 the Hub reports for each file.
+schema = 1
+
+[binaries.ffmpeg]
+title = "FFmpeg"
+description = "Обработка звука и сборка видео (GPL-сборка BtbN с rubberband и аппаратными энкодерами)."
+license = "GPL-3.0"
+url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n9.0-latest-win64-gpl-9.0.zip"
+checksums = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/checksums.sha256"
+extract = ["bin/ffmpeg.exe", "bin/ffprobe.exe"]
+size_mb = 200
+update = "version-check"
+
+[binaries.yt-dlp]
+title = "yt-dlp"
+description = "Скачивание видео. Обновляется при каждом запуске."
+license = "Unlicense"
+url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+checksums = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/SHA2-256SUMS"
+size_mb = 18
+update = "self"  # yt-dlp.exe -U
+
+[binaries.deno]
+title = "Deno"
+description = "JavaScript-движок, без которого yt-dlp не видит все форматы YouTube."
+license = "MIT"
+url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
+checksums = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip.sha256sum"
+extract = ["deno.exe"]
+size_mb = 45
+update = "version-check"
+
+[binaries.aria2c]
+title = "aria2"
+description = "Ускоряет скачивание в несколько потоков."
+license = "GPL-2.0"
+url = "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip"
+sha256 = "67d015301eef0b612191212d564c5bb0a14b5b9c4796b76454276a4d28d9b288"
+extract = ["aria2-1.37.0-win-64bit-build1/aria2c.exe"]
+size_mb = 6
+update = "pinned"
+
+[data.nltk_punkt_tab]
+title = "NLTK punkt_tab"
+description = "Разбивка на предложения для выравнивания слов."
+license = "Apache-2.0"
+url = "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt_tab.zip"
+sha256 = "e57f64187974277726a3417ca6f181ec5403676c717672eef6a748a7b20e0106"
+dest = "nltk_data/tokenizers"
+size_mb = 5
+
+# Models: repo on the Hugging Face Hub, files to fetch, local folder under models/.
+[models."whisper:large-v3"]
+title = "Whisper large-v3"
+repo = "Systran/faster-whisper-large-v3"
+dir = "whisper-large-v3"
+license = "MIT"
+[models."whisper:large-v3-turbo"]
+title = "Whisper large-v3-turbo"
+repo = "mobiuslabsgmbh/faster-whisper-large-v3-turbo"
+dir = "whisper-large-v3-turbo"
+license = "MIT"
+[models."whisper:medium"]
+title = "Whisper medium"
+repo = "Systran/faster-whisper-medium"
+dir = "whisper-medium"
+license = "MIT"
+[models."whisper:small"]
+title = "Whisper small"
+repo = "Systran/faster-whisper-small"
+dir = "whisper-small"
+license = "MIT"
+[models."tts:xtts_v2"]
+title = "XTTS-v2"
+repo = "coqui/XTTS-v2"
+dir = "xtts_v2"
+files = ["config.json", "model.pth", "vocab.json", "speakers_xtts.pth", "dvae.pth", "mel_stats.pth", "LICENSE.txt"]
+license = "CPML (некоммерческая)"
+noncommercial = true
+[models."tts:f5_tts_ru"]
+title = "F5-TTS Russian"
+repo = "Misha24-10/F5-TTS_RUSSIAN"
+dir = "f5_tts_ru"
+files = ["F5TTS_v1_Base_v2/model_last_inference.safetensors", "F5TTS_v1_Base/vocab.txt"]
+license = "CC-BY-NC-4.0 (некоммерческая)"
+noncommercial = true
+[models."translate:madlad400-3b"]
+title = "MADLAD-400 3B (офлайн-перевод)"
+repo = "Heng666/madlad400-3b-mt-ct2-int8"
+dir = "madlad400-3b-ct2-int8"
+license = "Apache-2.0"

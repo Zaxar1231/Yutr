@@ -21,6 +21,8 @@ dependencies = [
     "anthropic>=2.6",
     "keyring>=25.7",
     "sentencepiece>=0.2",
+    "flet-video>=1.1,<2",
+    "av>=16,<18",
 ]
 
 [project.scripts]
@@ -62,9 +64,14 @@ packages = ["autodub"]
 [[tool.mypy.overrides]]
 module = ["pynvml", "flet", "flet.*", "torch", "torch.*", "TTS.*", "f5_tts.*", "demucs.*",
           "whisperx", "pyannote.*", "num2words", "soundfile", "faster_whisper", "faster_whisper.*",
-          "ctranslate2", "sentencepiece", "keyring", "keyring.*", "playwright.*"]
+          "ctranslate2", "sentencepiece", "keyring", "keyring.*", "playwright.*", "flet_video"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[[tool.mypy.overrides]]
+# UI callbacks use small lambdas that chain side effects.
+module = ["autodub.app.*"]
+disable_error_code = ["func-returns-value"]

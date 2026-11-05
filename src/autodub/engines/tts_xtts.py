@@ -107,7 +107,7 @@ def run(params: dict[str, Any], progress: Any) -> dict[str, Any]:
             w = out["wav"]
             pieces.append(w.float().cpu().numpy() if hasattr(w, "cpu") else np.asarray(w))
             pieces.append(np.zeros(int(0.12 * SR), dtype=np.float32))
-        wav = np.concatenate(pieces[:-1]).astype(np.float32)
+        wav = _audio.trim_silence(np.concatenate(pieces[:-1]).astype(np.float32), SR)
         _audio.write(item["out"], wav, SR)
         durations[str(item["id"])] = round(len(wav) / SR, 3)
         progress((i + 1) / len(items), f"Озвучено фраз: {i + 1} из {len(items)}")

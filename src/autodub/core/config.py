@@ -29,6 +29,19 @@ class HardwareConfig(BaseModel):
     speedtest_urls: list[str] = Field(default_factory=list)  # empty = built-in list
 
 
+class DefaultsConfig(BaseModel):
+    """Job settings chosen in «Настройки»; the main screen uses them for new jobs."""
+
+    quality: str = "best"
+    mode: str = "dub"
+    original_volume: float = 0.2
+    translator: str = "claude"
+    claude_model: str = "claude-opus-5-5"
+    tts_engine: str | None = None  # None = from the performance profile
+    diarize: bool = False
+    cookies_from_browser: str = ""
+
+
 class UpdatesConfig(BaseModel):
     repository: str = "Zaxar1231/Yutr"
     channel: str = "stable"
@@ -40,6 +53,9 @@ class AppConfig(BaseModel):
     schema_version: int = SCHEMA_VERSION
     output_dir: str | None = None
     theme: str = "system"
+    first_run_done: bool = False
+    licenses_accepted: list[str] = Field(default_factory=list)
+    defaults: DefaultsConfig = Field(default_factory=DefaultsConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
     updates: UpdatesConfig = Field(default_factory=UpdatesConfig)
 

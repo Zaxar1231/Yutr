@@ -40,7 +40,8 @@ def build_runtime(paths: AppPaths) -> Runtime:
         os.environ["PATH"] = path_extra + os.pathsep + os.environ.get("PATH", "")
     return Runtime(
         tools=Tools(ffmpeg, ffprobe),
-        ytdlp=[sys.executable, "-m", "yt_dlp"],
+        # Standalone yt-dlp (self-updating, bundles EJS) when installed; module otherwise.
+        ytdlp=[ytdlp_exe] if (ytdlp_exe := find_tool(paths, "yt-dlp")) else [sys.executable, "-m", "yt_dlp"],
         engine_python=engine_python(paths),
         models_dir=models,
         cache_dir=paths.cache,

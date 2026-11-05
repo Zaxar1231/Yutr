@@ -64,6 +64,7 @@ def run(params: dict[str, Any], progress: Any) -> dict[str, Any]:
             nfe_step=int(params.get("nfe_step", 32)),
             remove_silence=False,
         )
+        wav = _audio.trim_silence(wav, sr)
         _audio.write(item["out"], wav, sr)
         durations[str(item["id"])] = round(len(wav) / sr, 3)
         progress((i + 1) / len(items), f"Озвучено фраз: {i + 1} из {len(items)}")

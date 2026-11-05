@@ -39,3 +39,16 @@ def test_pick_reference_prefers_steady_clean_and_bounds_length() -> None:
     ids = [p.id for p in chosen]
     assert 1 in ids and 3 not in ids and 2 not in ids
     assert 6 <= sum(p.duration for p in chosen) <= 15
+
+
+def test_soft_cut_prefers_the_gap_between_words() -> None:
+    from autodub.pipeline.stages import SR_OUT, soft_cut
+
+    sr = SR_OUT
+    word = np.full(int(0.4 * sr), 0.5, dtype=np.float32)
+    gap = np.zeros(int(0.15 * sr), dtype=np.float32)
+    clip = np.concatenate([word, gap, word, gap, word])  # ~1.5 s
+    out = soft_cut(clip, 1.2)
+    assert len(out) <= int(1.2 * sr)
+    # the cut lands inside the second gap, not in the middle of the third word
+    assert int(0.95 * sr) <= len(out) <= int(1.1 * sr)
