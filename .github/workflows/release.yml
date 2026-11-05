@@ -3,6 +3,11 @@ name: Release
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (must equal pyproject.toml), e.g. 0.1.0"
+        required: true
 
 permissions:
   contents: write
@@ -24,9 +29,10 @@ jobs:
         shell: pwsh
         run: |
           $ver = (uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])").Trim()
-          $tag = "${{ github.ref_name }}".TrimStart("v")
+          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ inputs.version }}" } else { "${{ github.ref_name }}".TrimStart("v") }
           if ($ver -ne $tag) { throw "pyproject version $ver does not match tag $tag" }
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "TAG=v$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Tests
         run: uv run pytest -q
       - name: Build update archive and installer
@@ -47,8 +53,8 @@ jobs:
       - name: Changelog from commits since the previous tag
         shell: bash
         run: |
-          prev=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
-          range=${prev:+$prev..}${GITHUB_REF_NAME}
+          prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          range=${prev:+$prev..}HEAD
           {
             echo "## Изменения"
             for type in feat fix perf; do
@@ -67,5 +73,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           flags=""
-          [[ "$GITHUB_REF_NAME" == *-* ]] && flags="--prerelease"
-          gh release create "$GITHUB_REF_NAME" dist/* --title "Автодубляж ${VERSION}" --notes-file notes.md $flags
+          [[ "$TAG" == *-* ]] && flags="--prerelease"
+          # On a manual run the tag is created here, on the commit that was built.
+          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "Автодубляж ${VERSION}" \
+            --notes-file notes.md $flags
