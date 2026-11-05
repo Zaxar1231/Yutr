@@ -70,7 +70,7 @@ class FakeGitHub(http.server.SimpleHTTPRequestHandler):
     releases: ClassVar[list[dict]] = []
     files: ClassVar[Path] = Path()
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if self.path.startswith("/repos/"):
             body = json.dumps(self.releases).encode()
             self.send_response(200)
