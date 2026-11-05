@@ -38,3 +38,4 @@ installer/Output/
 Thumbs.db
 .idea/
 .vscode/
+!src/autodub/hardware/data/*.flac

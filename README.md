@@ -58,6 +58,8 @@
 
 Скриншоты обновляются командой `uv run python scripts/screenshots.py`. Тема переключается вместе с темой GitHub.
 
+Тестовая речь для калибровки — отрывок аудиокниги «Maybe—Tomorrow» из [LibriVox](https://librivox.org) (общественное достояние).
+
 **До и после:** фрагмент [оригинала](docs/assets/demo/before.mp4) и [дубляжа](docs/assets/demo/after.mp4) интервью из документального фильма GET LAMP (CC BY-SA 3.0, см. [docs/assets/demo](docs/assets/demo/README.md)).
 
 ## Системные требования

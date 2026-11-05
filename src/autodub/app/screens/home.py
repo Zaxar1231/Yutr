@@ -156,7 +156,6 @@ class HomeScreen(ft.Column):
             prefix_icon=ft.Icons.LINK,
             expand=True,
             on_submit=self._submit,
-            border_radius=28,
             filled=True,
         )
         self.quality = ft.Dropdown(

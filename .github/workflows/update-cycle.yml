@@ -1,0 +1,103 @@
+name: Update cycle
+
+# Real-world check of the release chain on a clean Windows runner:
+# install the older release from GitHub → it finds the newer release through the GitHub API,
+# downloads and verifies it → the next start runs the new version → a broken version rolls back.
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "Version to install first (without v)"
+        required: true
+        default: "0.1.0"
+      to:
+        description: "Version the update must reach (without v)"
+        required: true
+        default: "0.1.1"
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  cycle:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Pick versions
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $from = "${{ inputs.from }}"; $to = "${{ inputs.to }}"
+          } else {
+            $tags = gh release list -R ${{ github.repository }} --exclude-pre-releases --limit 2 --json tagName --jq '.[].tagName'
+            $tags = @($tags)
+            if ($tags.Count -lt 2) { "SKIP=1" | Out-File $env:GITHUB_ENV -Append; exit 0 }
+            $to = $tags[0].TrimStart("v"); $from = $tags[1].TrimStart("v")
+          }
+          "FROM=$from" | Out-File $env:GITHUB_ENV -Append
+          "TO=$to" | Out-File $env:GITHUB_ENV -Append
+      - name: Install the older release
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          gh release download "v$env:FROM" -R ${{ github.repository }} -p "Autodub-Setup-*.exe" -p "checksums.txt" -D dl
+          Push-Location dl
+          $expected = (Select-String "Autodub-Setup-$env:FROM.exe" checksums.txt).Line.Split(" ")[0]
+          $actual = (Get-FileHash "Autodub-Setup-$env:FROM.exe" -Algorithm SHA256).Hash.ToLower()
+          if ($expected -ne $actual) { throw "installer checksum mismatch" }
+          Pop-Location
+          $dir = "$env:RUNNER_TEMP\Autodub"
+          Start-Process "dl\Autodub-Setup-$env:FROM.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/CURRENTUSER","/DIR=$dir","/TASKS=" -Wait
+          if ((Get-Content "$dir\current") -ne $env:FROM) { throw "wrong version installed" }
+          "DIR=$dir" | Out-File $env:GITHUB_ENV -Append
+      - name: Start it — it must find, download and verify the newer release
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          $env:AUTODUB_LAUNCH_MODULE = "autodub.updater.selftest"
+          $env:AUTODUB_LAUNCHER_HEADLESS = "1"
+          $env:AUTODUB_SELFTEST_ACTION = "update"
+          $env:AUTODUB_SELFTEST_REPO = "${{ github.repository }}"
+          $env:AUTODUB_SELFTEST_REPORT = "$env:RUNNER_TEMP\r1.json"
+          & "$env:DIR\uv.exe" --config-file "$env:DIR\uv.toml" run --python 3.12 --no-project "$env:DIR\launcher.pyw"
+          for ($i = 0; $i -lt 360 -and !(Test-Path $env:AUTODUB_SELFTEST_REPORT); $i++) { Start-Sleep 1 }
+          Start-Sleep 2
+          Get-Content "$env:LOCALAPPDATA\Autodub\logs\launcher.log" -Tail 20
+          $r = Get-Content $env:AUTODUB_SELFTEST_REPORT | ConvertFrom-Json
+          $r | Format-List
+          if ($r.version -ne $env:FROM) { throw "expected $env:FROM to run first" }
+          if ($r.staged -ne $env:TO) { throw "update $env:TO was not staged" }
+          if ((Get-Content "$env:DIR\current") -ne $env:TO) { throw "pointer not switched" }
+      - name: Next start runs the new version
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          $env:AUTODUB_LAUNCH_MODULE = "autodub.updater.selftest"
+          $env:AUTODUB_LAUNCHER_HEADLESS = "1"
+          $env:AUTODUB_SELFTEST_REPORT = "$env:RUNNER_TEMP\r2.json"
+          & "$env:DIR\uv.exe" --config-file "$env:DIR\uv.toml" run --python 3.12 --no-project "$env:DIR\launcher.pyw"
+          for ($i = 0; $i -lt 360 -and !(Test-Path $env:AUTODUB_SELFTEST_REPORT); $i++) { Start-Sleep 1 }
+          Start-Sleep 2
+          $r = Get-Content $env:AUTODUB_SELFTEST_REPORT | ConvertFrom-Json
+          if ($r.version -ne $env:TO) { throw "expected $env:TO after update, got $($r.version)" }
+          "Updated $env:FROM -> $($r.version)"
+      - name: A broken start of the new version rolls back to the old one
+        if: env.SKIP != '1'
+        shell: pwsh
+        run: |
+          Remove-Item "$env:DIR\versions\$env:TO\.started_ok" -ErrorAction SilentlyContinue
+          Set-Content "$env:DIR\previous" $env:FROM -NoNewline
+          $env:AUTODUB_LAUNCH_MODULE = "autodub.updater.selftest"
+          $env:AUTODUB_LAUNCHER_HEADLESS = "1"
+          $env:AUTODUB_SELFTEST_ACTION = "crash"
+          $env:AUTODUB_SELFTEST_CRASH_VERSION = $env:TO
+          $env:AUTODUB_SELFTEST_REPORT = "$env:RUNNER_TEMP\r3.json"
+          & "$env:DIR\uv.exe" --config-file "$env:DIR\uv.toml" run --python 3.12 --no-project "$env:DIR\launcher.pyw"
+          if ((Get-Content "$env:DIR\current") -ne $env:FROM) { throw "no rollback" }
+          if (!(Select-String -Path "$env:DIR\bad.json" -Pattern $env:TO -SimpleMatch)) { throw "bad version not recorded" }
+          "Rolled back $env:TO -> $env:FROM"
