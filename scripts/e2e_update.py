@@ -113,7 +113,12 @@ def launcher(install: Path, data: Path, action: str, report: Path, extra: dict[s
         }
     )
     env.pop("VIRTUAL_ENV", None)
-    return subprocess.run([sys.executable, str(install / "launcher.pyw")], env=env, timeout=1800).returncode
+    report.unlink(missing_ok=True)
+    code = subprocess.run([sys.executable, str(install / "launcher.pyw")], env=env, timeout=1800).returncode
+    if not report.exists():
+        log = data / "logs" / "launcher.log"
+        print(log.read_text("utf-8")[-6000:] if log.exists() else "no launcher log", flush=True)
+    return code
 
 
 def main() -> None:
